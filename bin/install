@@ -121,7 +121,7 @@ get_download_url () {
     esac
 
     if [[ -n "$lib_environment" ]]; then
-      fail "Unsupported environment "${lib_environment}" for ${platform}"
+      fail "Unsupported environment ${lib_environment} for ${platform}"
     fi
   elif [[ "$platform" == "unknown-linux" ]]; then
     case $architecture in
@@ -131,7 +131,7 @@ get_download_url () {
 
     case $lib_environment in
       gnu|musl|gnueabihf) ;;
-      *) fail "Unsupported environment "${lib_environment}" for ${platform}" ;;
+      *) fail "Unsupported environment ${lib_environment} for ${platform}" ;;
     esac
   fi
 
