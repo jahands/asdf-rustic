@@ -1,6 +1,6 @@
 # asdf-rustic
 
-[rustic](https://rustic.cli.rs/) plugin for [asdf](https://github.com/asdf-vm/asdf) version manager
+[rustic](https://rustic.cli.rs/) plugin for [asdf](https://github.com/asdf-vm/asdf) and [mise](https://github.com/jdx/mise) version managers
 
 ## Install
 
@@ -20,11 +20,11 @@ mise plugin add restic
 
 ### asdf
 
-Ceck out the [asdf](https://github.com/asdf-vm/asdf) readme for instructions on how to install and manage version of [rustic](https://rustic.cli.rs/).
+Ceck out the [asdf](https://github.com/asdf-vm/asdf) readme for instructions on how to install and manage versions of [rustic](https://rustic.cli.rs/).
 
 ### mise
 
-Ceck out the [mise](https://mise.jdx.dev/plugins.html) docs for instructions on how to install and manage version of [rustic](https://rustic.cli.rs/).
+Ceck out the [mise](https://mise.jdx.dev/plugins.html) docs for instructions on how to install and manage versions of [rustic](https://rustic.cli.rs/).
 
 ## TODO
 
