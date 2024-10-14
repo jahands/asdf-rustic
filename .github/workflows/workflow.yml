@@ -19,7 +19,7 @@ jobs:
     needs: [lint]
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest, alpine-latest, centos-latest]
         ver:  [0.9.3]
 
     runs-on: ${{ matrix.os }}
