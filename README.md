@@ -7,13 +7,13 @@
 ### asdf
 
 ```shell
-asdf plugin add restic
+asdf plugin add rustic
 ```
 
 ### mise
 
 ```shell
-mise plugin add restic
+mise plugin add rustic
 ```
 
 ## Use
