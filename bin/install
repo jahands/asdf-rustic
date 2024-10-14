@@ -11,10 +11,15 @@ set \
 : "${ASDF_INSTALL_PATH?}"
 
 # make a temporary download directory with a cleanup hook
-TMP_DOWNLOAD_DIR="$(mktemp -d -t "asdf_restic_XXXXXX")"
+TMP_DOWNLOAD_DIR="$(mktemp -d -t "asdf_rustic_XXXXXX")"
 readonly TMP_DOWNLOAD_DIR
 
 trap 'rm -rf "${TMP_DOWNLOAD_DIR?}"' EXIT
+
+fail() {
+  echo -e "\e[31mFail:\e[m $*"
+  exit 1
+}
 
 install () {
   # local -r install_type="$1"
@@ -26,42 +31,35 @@ install () {
   local -r download_url="$(get_download_url "${version}")"
   local -r filename=$(basename "${download_url}")
   
-  echo "Downloading version ${version} of restic"
+  echo "Downloading version ${version} of rustic"
   if curl -sfL -o "${TMP_DOWNLOAD_DIR}/${filename}" "${download_url}"; then
 
-    echo "Extracting version ${version} of restic"
-    case "${filename##*.}" in 
-    bz2)
-      OLDPWD=$(pwd)
-      cd "${TMP_DOWNLOAD_DIR}"
-      bzip2 -d "${filename}"
-      cd "${OLDPWD}"
-    esac
+    echo "Extracting version ${version} of rustic"
+    oldpwd=$(pwd)
+    echo "$filename"
+    cd "${TMP_DOWNLOAD_DIR}"
+    tar -xzf "${filename}"
+    cd "${oldpwd}"
 
-    echo "Cleaning restic previous binaries"
+    echo "Cleaning rustic previous binaries"
     rm -rf "${bin_install_path?}"
 
-    echo "Creating restic bin directory"
+    echo "Creating rustic bin directory"
     mkdir -p "${bin_install_path}"
 
-    local f
-    for f in "${TMP_DOWNLOAD_DIR}"/*; do
-    
-      if [ -f "${f}" ]; then
-        cp "${f}" "${bin_install_path}"/restic
-        chmod +x "${bin_install_path}"/restic
-      fi
-    done
+    if [[ ! -f "${TMP_DOWNLOAD_DIR}/rustic" ]]; then
+      ls -lh "${TMP_DOWNLOAD_DIR}"
+      fail "Error: failed to extract rustic archive"
+    fi
+
+    echo "Copying rustic executable to bin directory"
+    cp "${TMP_DOWNLOAD_DIR}/rustic" "${bin_install_path}/rustic"
+    chmod +x "${bin_install_path}/rustic"
+
     echo "Done"
   else
-    echo "Error: restic version ${version} not found" >&2
-    exit 1
+    fail "Error: rustic version ${version} not found"
   fi
-}
-
-fail() {
-  echo -e "\e[31mFail:\e[m $*"
-  exit 1
 }
 
 get_filename () {
@@ -72,71 +70,74 @@ get_filename () {
   echo "${version}/dist_${arch}${ext}"
 }
 
+get_lib_environment () {
+  local ldd_version="$(ldd --version 2>&1)"
+  # ldd --version will fail on alpine 3.10, but
+  # it should still contain "musl" so it should be
+  # safe to ignore errors and grep for the string regardless.
+  # Other versions of Alpine will output "musl" in ldd --version
+  if echo "$ldd_version" | grep -qiF musl; then
+    echo "musl"
+  elif cat /etc/portage/make.conf 2>&1 | grep -qiF gnueabihf; then
+    echo "gnueabihf"
+  else
+    # all other cases, assume gnu
+    echo "gnu"
+  fi
+}
+
 get_download_url () {
   local -r version="$1"
-  local platform
-  local IS_EXISTS=1
 
+  local platform
   case "$OSTYPE" in
-    darwin*) platform="darwin" ;;
-    linux*) platform="linux" ;;
-    openbsd*) platform="openbsd" ;;
-    FreeBSD) platform="freebsd" ;;
-    netbsd) platform="netbsd" ;;
-    solaris*) platform="solaris" ;;
+    darwin*) platform="apple-darwin" ;;
+    linux*) platform="unknown-linux" ;;
      *) fail "Unsupported platform" ;;
   esac
 
+  # standardize architecture naming to match rustic releases
   local architecture
-
   case "$(uname -m)" in
-    aarch64* | arm64) architecture="arm64" ;;
-    armv5* | armv6* | armv7*) architecture="arm" ;;
-    x86_64*) architecture="amd64" ;;
-    i386 | i686 | x86) architecture="386" ;;
-    mips) architecture="mips" ;;
-    mips64) architecture="mips64" ;;
-    s390x) architecture="s390x" ;;
-    ppc64) architecture="ppc64" ;;
+    aarch64* | arm64) architecture="aarch64" ;;
+    armv7*) architecture="armv7" ;;
+    x86_64*) architecture="x86_64" ;;
+    i686 | x86) architecture="i686" ;;
     *) fail "Unsupported architecture" ;;
   esac
-  
-  if [ "$platform" == "darwin" ]; then
+
+  local lib_environment="$(get_lib_environment)"
+
+  # ensure architecture/environment is supported on platform
+  if [[ "$platform" == "darwin" ]]; then
     case $architecture in
-      amd64|arm64) IS_EXISTS=1 ;;
+      x86_64|arm64) ;;
       *) fail "Unsupported architecture for ${platform}" ;;
     esac
-  elif [ "$platform" == "linux" ]; then
+
+    if [[ -n "$lib_environment" ]]; then
+      fail "Unsupported environment for ${platform}"
+    fi
+  elif [[ "$platform" == "unknown-linux" ]]; then
     case $architecture in
-      amd64|arm64|arm|386|mips|mips64|s390x|ppc64) IS_EXISTS=1 ;;
+      x86_64|aarch64|armv7|i686) ;;
       *) fail "Unsupported architecture for ${platform}" ;;
     esac
-  elif [ "$platform" == "openbsd" ]; then
-    case $architecture in
-      amd64|386) IS_EXISTS=1 ;;
-      *) fail "Unsupported architecture for ${platform}" ;;
-    esac
-  elif [ "$platform" == "freebsd" ]; then
-    case $architecture in
-      amd64|arm|386) IS_EXISTS=1 ;;
-      *) fail "Unsupported architecture for ${platform}" ;;
-    esac
-  elif [ "$platform" == "netbsd" ]; then
-    case $architecture in
-      amd64|386) IS_EXISTS=1 ;;
-      *) fail "Unsupported architecture for ${platform}" ;;
-    esac
-  elif [ "$platform" == "solaris" ]; then
-    case $architecture in
-      amd64) IS_EXISTS=1 ;;
-      *) fail "Unsupported architecture for ${platform}" ;;
+
+    case $lib_environment in
+      gnu|musl|gnueabihf) ;;
+      *) fail "Unsupported environment for ${platform}" ;;
     esac
   fi
 
-  if [ $IS_EXISTS -eq 1 ]; then
-    echo https://github.com/restic/restic/releases/download/v"${version}"/restic_"${version}"_"${platform}"_"${architecture}".bz2
+  if [[ -n "$lib_environment" ]]; then
+    lib_environment="-${lib_environment}"
   fi
 
+  # e.g. rustic-v0.9.3-aarch64-apple-darwin.tar.gz
+  # more examples: https://github.com/rustic-rs/rustic/releases/tag/v0.9.3
+  echo https://github.com/rustic-rs/rustic/releases/download/v"${version}"/rustic-v"${version}"-"${architecture}"-"${platform}""${lib_environment}".tar.gz
 }
 
+get_download_url "0.9.3" >&2
 install "${ASDF_INSTALL_TYPE}" "${ASDF_INSTALL_VERSION}" "${ASDF_INSTALL_PATH}"

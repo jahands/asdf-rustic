@@ -5,14 +5,14 @@ set \
   -o pipefail \
   -o errexit
 
-readonly VER_REGEX='v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
+readonly ver_regex='v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
 
 get_git_tags () {
   local -r repo_url="$1"
 
   local tag
   for tag in $(git ls-remote --tags "${repo_url}"); do
-    if [[ ${tag} =~ refs/tags/${VER_REGEX}$ ]]; then
+    if [[ ${tag} =~ refs/tags/${ver_regex}$ ]]; then
         version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
         echo "${version}"
     fi
@@ -22,7 +22,7 @@ get_git_tags () {
 }
 
 list_all () {
-  get_git_tags "https://github.com/restic/restic" | tr -s ' ' | sed "s/v//"
+  get_git_tags "https://github.com/rustic-rs/rustic" | tr -s ' ' | sed "s/v//"
 }
 
 list_all
