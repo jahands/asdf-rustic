@@ -31,7 +31,7 @@ install () {
   local -r download_url="$(get_download_url "${version}")"
   local -r filename=$(basename "${download_url}")
   
-  echo "Downloading version ${version} of rustic"
+  echo "Downloading version ${version} of rustic: ${download_url}"
   if curl -sfL -o "${TMP_DOWNLOAD_DIR}/${filename}" "${download_url}"; then
 
     echo "Extracting version ${version} of rustic"
