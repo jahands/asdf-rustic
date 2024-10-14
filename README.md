@@ -29,7 +29,7 @@ Ceck out the [mise](https://mise.jdx.dev/plugins.html) docs for instructions on 
 ## TODO
 
 - [ ] Add support for additional machine types that support gnu
-- [ ] Windows support
+- [ ] Windows support? Mise [supports it](https://mise.jdx.dev/getting-started.html#windows), but it doesn't look like asdf does.
 
 ## Credits
 
