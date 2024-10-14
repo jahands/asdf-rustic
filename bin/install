@@ -71,14 +71,13 @@ get_filename () {
 }
 
 get_lib_environment () {
-  local ldd_version="$(ldd --version 2>&1)"
   # ldd --version will fail on alpine 3.10, but
   # it should still contain "musl" so it should be
   # safe to ignore errors and grep for the string regardless.
   # Other versions of Alpine will output "musl" in ldd --version
-  if echo "$ldd_version" | grep -qiF musl; then
+  if ldd --version 2>&1 | grep -qiF musl; then
     echo "musl"
-  elif cat /etc/portage/make.conf 2>&1 | grep -qiF gnueabihf; then
+  elif [[ -f "/etc/portage/make.conf" ]] && grep -qiF gnueabihf /etc/portage/make.conf; then
     echo "gnueabihf"
   else
     # all other cases, assume gnu
@@ -106,7 +105,8 @@ get_download_url () {
     *) fail "Unsupported architecture" ;;
   esac
 
-  local lib_environment="$(get_lib_environment)"
+  local lib_environment
+  lib_environment="$(get_lib_environment)"
 
   # ensure architecture/environment is supported on platform
   if [[ "$platform" == "darwin" ]]; then
