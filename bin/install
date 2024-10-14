@@ -115,9 +115,7 @@ get_download_url () {
       *) fail "Unsupported architecture for ${platform}" ;;
     esac
 
-    if [[ -n "$lib_environment" ]]; then
-      fail "Unsupported environment for ${platform}"
-    fi
+    lib_environment="" # not used for macos versions
   elif [[ "$platform" == "unknown-linux" ]]; then
     case $architecture in
       x86_64|aarch64|armv7|i686) ;;
