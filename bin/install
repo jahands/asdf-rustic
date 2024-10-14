@@ -71,6 +71,11 @@ get_filename () {
 }
 
 get_lib_environment () {
+  local -r platform="$1"
+  if [[ "${platform}" == "apple-darwin" ]]; then
+    return
+  fi
+
   # ldd --version will fail on alpine 3.10, but
   # it should still contain "musl" so it should be
   # safe to ignore errors and grep for the string regardless.
@@ -106,7 +111,7 @@ get_download_url () {
   esac
 
   local lib_environment
-  lib_environment="$(get_lib_environment)"
+  lib_environment="$(get_lib_environment "${platform}")"
 
   # ensure architecture/environment is supported on platform
   if [[ "$platform" == "darwin" ]]; then
@@ -115,7 +120,9 @@ get_download_url () {
       *) fail "Unsupported architecture for ${platform}" ;;
     esac
 
-    lib_environment="" # not used for macos versions
+    if [[ -n "$lib_environment" ]]; then
+      fail "Unsupported environment ${lib_environment} for ${platform}"
+    fi
   elif [[ "$platform" == "unknown-linux" ]]; then
     case $architecture in
       x86_64|aarch64|armv7|i686) ;;
@@ -124,7 +131,7 @@ get_download_url () {
 
     case $lib_environment in
       gnu|musl|gnueabihf) ;;
-      *) fail "Unsupported environment for ${platform}" ;;
+      *) fail "Unsupported environment ${lib_environment} for ${platform}" ;;
     esac
   fi
 
