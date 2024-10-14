@@ -139,5 +139,4 @@ get_download_url () {
   echo https://github.com/rustic-rs/rustic/releases/download/v"${version}"/rustic-v"${version}"-"${architecture}"-"${platform}""${lib_environment}".tar.gz
 }
 
-get_download_url "0.9.3" >&2
 install "${ASDF_INSTALL_TYPE}" "${ASDF_INSTALL_VERSION}" "${ASDF_INSTALL_PATH}"
