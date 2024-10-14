@@ -36,7 +36,7 @@ install () {
 
     echo "Extracting version ${version} of rustic"
     oldpwd=$(pwd)
-    echo "$filename"
+
     cd "${TMP_DOWNLOAD_DIR}"
     tar -xzf "${filename}"
     cd "${oldpwd}"
